@@ -1,12 +1,20 @@
 "use strict";
 
-class UserStorage {
-    static _users = {
-        id: ["rusty", "woorimIT", "test"],
-        psword: ["5018", "1234", "123456"],
-        name: ["김재형", "우리밋", "테스트"],
-    };
+const fs = require('fs').promises;
 
+class UserStorage {
+    static _getUserInfo(data, id) {
+        const users = JSON.parse(data);
+        const idx = users.id.indexOf(id);
+        const usersKeys = Object.keys(users); // => [id, psword, name]
+        const userInfo = usersKeys.reduce((newUser, info) => {
+            newUser[info] = users[info][idx];
+            return newUser;
+        }, {});
+        
+        return userInfo; 
+    }
+    
     static getUsers(...fields) { // 은닉화한 user정보를 내보내기 위한 함수 
         const users = this._users;
         const newUsers = fields.reduce((newUsers, field) => {
@@ -19,15 +27,11 @@ class UserStorage {
     }
 
     static getUserInfo(id) {
-        const users = this._users;
-        const idx = users.id.indexOf(id);
-        const usersKeys = Object.keys(users); // => [id, psword, name]
-        const userInfo = usersKeys.reduce((newUser, info) => {
-            newUser[info] = users[info][idx];
-            return newUser;
-        }, {});
-
-        return userInfo;
+        return fs.readFile("./src/databases/users.json")
+          .then((data) => {
+            return this._getUserInfo(data, id);   
+          })
+          .catch(console.error);
     }
 
     static save(userInfo) {
